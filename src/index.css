@@ -1,0 +1,434 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-dark-200 text-white font-sans;
+    background: #0c0c14;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(110,75,255,0.6), rgba(77,208,255,0.5));
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(110,75,255,0.9), rgba(77,208,255,0.8));
+  }
+
+  /* Selection */
+  ::selection { background: rgba(110,75,255,0.4); color: white; }
+
+  /* Focus */
+  :focus-visible { outline: 2px solid rgba(110,75,255,0.7); outline-offset: 2px; border-radius: 4px; }
+}
+
+@layer components {
+  /* ── Glass cards ───────────────────────────── */
+  .glass {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+  }
+
+  .glass-strong {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: all 0.35s cubic-bezier(0.22,0.8,0.22,1);
+  }
+
+  .glass-card:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.14);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(110,75,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    transform: translateY(-3px);
+  }
+
+  /* ── Premium card with sheen on hover ──────── */
+  .card-premium {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: transform 0.4s cubic-bezier(0.22,0.8,0.22,1), box-shadow 0.4s, border-color 0.4s;
+  }
+  .card-premium::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.7s cubic-bezier(0.22,0.8,0.22,1);
+    pointer-events: none;
+  }
+  .card-premium:hover {
+    transform: translateY(-4px);
+    border-color: rgba(110,75,255,0.4);
+    box-shadow: 0 16px 48px rgba(110,75,255,0.18), 0 0 0 1px rgba(110,75,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .card-premium:hover::before { transform: translateX(100%); }
+
+  /* ── Gradient text ─────────────────────────── */
+  .grad {
+    background: linear-gradient(135deg, #6e4bff 0%, #4dd0ff 55%, #2bf2c0 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 8s ease infinite;
+  }
+
+  .grad-pink {
+    background: linear-gradient(135deg, #ff5edb 0%, #6e4bff 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 8s ease infinite;
+  }
+
+  .grad-warm {
+    background: linear-gradient(135deg, #ff8c42 0%, #ff5edb 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 8s ease infinite;
+  }
+
+  /* ── Buttons ───────────────────────────────── */
+  .btn-primary {
+    @apply relative overflow-hidden px-5 py-2.5 rounded-xl font-semibold text-sm text-dark-300;
+    background: linear-gradient(135deg, #6e4bff 0%, #4dd0ff 55%, #2bf2c0 100%);
+    background-size: 200% 200%;
+    box-shadow: 0 6px 20px rgba(110,75,255,0.45), inset 0 1px 0 rgba(255,255,255,0.4);
+    transition: all 0.25s cubic-bezier(0.22,0.8,0.22,1);
+    animation: gradientFlow 6s ease infinite;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(110,75,255,0.6), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .btn-primary:hover::before { transform: translateX(100%); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    @apply glass px-5 py-2.5 rounded-xl font-medium text-sm text-white/80;
+    transition: all 0.25s cubic-bezier(0.22,0.8,0.22,1);
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  /* ── Input ─────────────────────────────────── */
+  .input-glass {
+    @apply w-full glass rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none;
+    transition: all 0.25s ease;
+  }
+  .input-glass:focus {
+    border-color: rgba(110,75,255,0.6);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 0 0 3px rgba(110,75,255,0.15);
+  }
+
+  /* ── Badge ─────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium;
+    background: rgba(110,75,255,0.15);
+    border: 1px solid rgba(110,75,255,0.3);
+    color: rgba(167,139,250,1);
+    backdrop-filter: blur(12px);
+  }
+
+  /* ── Neon border ───────────────────────────── */
+  .neon-border {
+    border: 1px solid transparent;
+    background: linear-gradient(#0c0c14, #0c0c14) padding-box,
+                linear-gradient(135deg, #6e4bff, #4dd0ff, #2bf2c0) border-box;
+  }
+
+  /* ── Animated rainbow border (magic outline) ─ */
+  .rainbow-border {
+    position: relative;
+    background: rgba(12,12,20,0.85);
+    border-radius: 1rem;
+  }
+  .rainbow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #6e4bff, #4dd0ff, #2bf2c0, #ff5edb, #6e4bff);
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: gradientFlow 6s ease infinite;
+    pointer-events: none;
+  }
+
+  /* ── Shimmer loading ───────────────────────── */
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s infinite;
+  }
+
+  /* ── Section title bar ─────────────────────── */
+  .section-title {
+    @apply font-display font-semibold text-white text-base sm:text-lg flex items-center gap-2;
+  }
+  .section-icon-tile {
+    @apply w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0;
+    background: rgba(110,75,255,0.18);
+    border: 1px solid rgba(110,75,255,0.3);
+    box-shadow: 0 0 18px -4px rgba(110,75,255,0.45);
+  }
+
+  /* ── Step pill (for guide sections) ────────── */
+  .step-pill {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px) saturate(180%);
+    transition: transform 0.35s cubic-bezier(0.22,0.8,0.22,1), border-color 0.35s, box-shadow 0.35s;
+  }
+  .step-pill::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+  .step-pill:hover {
+    transform: translateY(-3px);
+    border-color: rgba(110,75,255,0.4);
+    box-shadow: 0 18px 40px rgba(110,75,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .step-pill:hover::before { opacity: 1; }
+
+  /* ── Hover lift utility ────────────────────── */
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.22,0.8,0.22,1), box-shadow 0.3s;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+
+  /* ── Glow pulse ring ───────────────────────── */
+  .glow-ring {
+    position: relative;
+  }
+  .glow-ring::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: radial-gradient(closest-side, rgba(110,75,255,0.4), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(10px);
+  }
+  .glow-ring:hover::after { opacity: 1; }
+}
+
+/* ── Keyframes ───────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gradientFlow {
+  0%,100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes floatY {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+@keyframes floatXY {
+  0%   { transform: translate(0,0); }
+  33%  { transform: translate(20px,-22px); }
+  66%  { transform: translate(-18px,16px); }
+  100% { transform: translate(0,0); }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes twinkle {
+  0%,100% { opacity: 0.2; transform: scale(0.85); }
+  50%     { opacity: 1;   transform: scale(1.15); }
+}
+
+@keyframes ringPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(110,75,255,0.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(110,75,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(110,75,255,0); }
+}
+
+@keyframes auroraPan {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  50%     { transform: translate3d(2%,-3%,0) scale(1.06); }
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.45; }
+}
+
+/* ── Animated background ─────────────────────── */
+.animated-gradient {
+  background: linear-gradient(-45deg, #0c0c14, #12102a, #0c1a14, #12100a);
+  background-size: 400% 400%;
+  animation: gradientFlow 12s ease infinite;
+}
+
+/* ── Floating blobs ──────────────────────────── */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+  will-change: transform;
+}
+.blob-anim-1 { animation: floatXY 18s ease-in-out infinite; }
+.blob-anim-2 { animation: floatXY 22s ease-in-out infinite reverse; }
+.blob-anim-3 { animation: floatY 14s ease-in-out infinite; }
+
+/* ── Sparkle field (decorative dots) ─────────── */
+.sparkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 0 8px rgba(255,255,255,0.85);
+  animation: twinkle 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Aurora overlay ──────────────────────────── */
+.aurora {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(40% 30% at 20% 20%, rgba(110,75,255,0.18), transparent 70%),
+    radial-gradient(35% 25% at 80% 30%, rgba(77,208,255,0.15), transparent 70%),
+    radial-gradient(30% 20% at 50% 80%, rgba(43,242,192,0.12), transparent 70%);
+  animation: auroraPan 14s ease-in-out infinite;
+  pointer-events: none;
+  filter: blur(20px);
+}
+
+/* ── Utilities ──────────────────────────────── */
+@layer utilities {
+  .text-muted { color: rgba(255,255,255,0.45); }
+  .text-soft  { color: rgba(255,255,255,0.65); }
+  .text-dim   { color: rgba(255,255,255,0.85); }
+
+  .border-glass   { border-color: rgba(255,255,255,0.08); }
+  .border-glass-2 { border-color: rgba(255,255,255,0.14); }
+  .border-glass-3 { border-color: rgba(255,255,255,0.22); }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .text-shadow-soft  { text-shadow: 0 2px 12px rgba(0,0,0,0.45); }
+  .text-shadow-glow  { text-shadow: 0 0 24px rgba(110,75,255,0.5); }
+
+  .anim-float-y      { animation: floatY 6s ease-in-out infinite; }
+  .anim-float-y-slow { animation: floatY 9s ease-in-out infinite; }
+  .anim-spin-slow    { animation: spinSlow 14s linear infinite; }
+  .anim-twinkle      { animation: twinkle 3.6s ease-in-out infinite; }
+  .anim-ring-pulse   { animation: ringPulse 2.4s ease-out infinite; }
+  .anim-pop          { animation: pop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .anim-blink        { animation: blink 1.4s ease-in-out infinite; }
+
+  .stroke-shine {
+    position: relative;
+    background-clip: padding-box;
+  }
+  .stroke-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(110,75,255,0.5), rgba(77,208,255,0.5), rgba(43,242,192,0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
