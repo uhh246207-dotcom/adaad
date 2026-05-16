@@ -1,48 +1,45 @@
 // ============================================================================
-// SCRIPT: Tự động tạo hàng loạt ảnh thẻ/banner từ PSD template + CSV
-// Chạy trên: Adobe Photoshop (File > Scripts > Browse... chọn file .jsx này)
-// Tác giả: Generated for batch PSD processing
+// SCRIPT: Tự động tạo hàng loạt ảnh từ PSD template + CSV
+// CÁCH DÙNG SIÊU ĐƠN GIẢN:
+//   1. Để file này, template.psd, data.csv vào CÙNG 1 thư mục
+//   2. Mở Photoshop > File > Scripts > Browse... > chọn file này
+//   3. Xong! Ảnh xuất ra thư mục "Output_Images" ngay bên cạnh
 // ============================================================================
 
 #target photoshop
 app.bringToFront();
 
 // ============================================================================
-// PHẦN 1: CẤU HÌNH (chỉnh sửa các đường dẫn ở đây trước khi chạy)
+// TỰ ĐỘNG: Lấy thư mục chứa script này (KHÔNG CẦN SỬA GÌ!)
 // ============================================================================
+var SCRIPT_FOLDER = new File($.fileName).parent;
+
 var CONFIG = {
-    // Đường dẫn tuyệt đối tới file PSD mẫu (KHÔNG bao giờ bị ghi đè)
-    templatePath: "C:/Users/YOUR_USER/Desktop/template.psd",
+    // Tự tìm 3 file trong CÙNG thư mục với script
+    templatePath: SCRIPT_FOLDER + "/template.psd",
+    csvPath:      SCRIPT_FOLDER + "/data.csv",
+    outputDir:    SCRIPT_FOLDER + "/Output_Images",
 
-    // Đường dẫn tuyệt đối tới file CSV (UTF-8, dấu phân tách: ',')
-    csvPath:      "C:/Users/YOUR_USER/Desktop/data.csv",
+    // Tên các layer trong PSD (PHẢI khớp chính xác với file PSD của bạn)
+    layerNameText:   "layer_name",
+    layerCodeText:   "layer_code",
+    layerAvatarSO:   "layer_avatar",
 
-    // Thư mục đầu ra (tự động tạo nếu chưa có)
-    outputDir:    "C:/Users/YOUR_USER/Desktop/Output_Images",
-
-    // Tên các layer trong PSD (PHẢI khớp chính xác)
-    layerNameText:   "layer_name",     // Text layer chứa tên khách hàng
-    layerCodeText:   "layer_code",     // Text layer chứa mã giảm giá
-    layerAvatarSO:   "layer_avatar",   // Smart Object layer chứa ảnh đại diện
-
-    // Chất lượng JPG: 0 (thấp) - 12 (cao nhất). Chuẩn yêu cầu: 12
+    // Chất lượng JPG: 12 = cao nhất
     jpgQuality: 12,
 
-    // Tiền tố tên file xuất ra: Anh_Chuc_Mung_<Ten>.jpg
+    // Tiền tố tên file: Anh_Chuc_Mung_<Ten>.jpg
     outputPrefix: "Anh_Chuc_Mung_"
 };
 
 // ============================================================================
-// PHẦN 2: HÀM TIỆN ÍCH (Utilities)
+// CÁC HÀM TIỆN ÍCH
 // ============================================================================
-
-// Bỏ khoảng trắng đầu/cuối chuỗi (ES3 không có String.trim)
 function trim(s) {
     if (s === null || s === undefined) return "";
     return String(s).replace(/^\s+|\s+$/g, "");
 }
 
-// Tìm vị trí phần tử trong mảng (ES3 không có Array.indexOf)
 function indexOfArr(arr, value) {
     for (var i = 0; i < arr.length; i++) {
         if (arr[i] === value) return i;
@@ -50,22 +47,13 @@ function indexOfArr(arr, value) {
     return -1;
 }
 
-// Làm sạch tên file (loại bỏ các ký tự không hợp lệ trên Windows/macOS)
-// LƯU Ý: Vẫn giữ lại ký tự tiếng Việt có dấu (Unicode)
 function sanitizeFileName(s) {
     return trim(s).replace(/[\\\/:\*\?"<>\|]/g, "_");
 }
 
-// Ghi log ra Console (Window > Show ESTK Console khi debug)
-function log(msg) {
-    $.writeln("[BatchPSD] " + msg);
-}
-
 // ============================================================================
-// PHẦN 3: ĐỌC FILE CSV (UTF-8, hỗ trợ trường có dấu nháy kép)
+// ĐỌC FILE CSV (UTF-8)
 // ============================================================================
-
-// Parse 1 dòng CSV thành mảng các cột, hỗ trợ trường được bao bởi "..."
 function parseCSVLine(line) {
     var result = [];
     var current = "";
@@ -73,9 +61,7 @@ function parseCSVLine(line) {
 
     for (var i = 0; i < line.length; i++) {
         var ch = line.charAt(i);
-
         if (ch === '"') {
-            // "" bên trong "..." => 1 dấu "
             if (inQuotes && i + 1 < line.length && line.charAt(i + 1) === '"') {
                 current += '"';
                 i++;
@@ -93,7 +79,6 @@ function parseCSVLine(line) {
     return result;
 }
 
-// Đọc toàn bộ CSV thành mảng 2 chiều, dòng đầu tiên là header
 function readCSV(csvFile) {
     csvFile.encoding = "UTF-8";
     if (!csvFile.open("r")) {
@@ -107,13 +92,13 @@ function readCSV(csvFile) {
         var line = csvFile.readln();
         if (line === null) break;
 
-        // Bỏ ký tự BOM (0xFEFF) nếu có ở đầu file UTF-8
+        // Bỏ ký tự BOM nếu có
         if (firstLine && line.length > 0 && line.charCodeAt(0) === 0xFEFF) {
             line = line.substring(1);
         }
         firstLine = false;
 
-        if (trim(line).length === 0) continue; // bỏ dòng trống
+        if (trim(line).length === 0) continue;
         rows.push(parseCSVLine(line));
     }
 
@@ -122,16 +107,12 @@ function readCSV(csvFile) {
 }
 
 // ============================================================================
-// PHẦN 4: THAO TÁC VỚI LAYER TRONG PHOTOSHOP
+// THAO TÁC LAYER
 // ============================================================================
-
-// Tìm layer (đệ quy vào cả Group/LayerSet) theo tên chính xác
 function findLayerByName(parent, layerName) {
     for (var i = 0; i < parent.layers.length; i++) {
         var layer = parent.layers[i];
         if (layer.name === layerName) return layer;
-
-        // Nếu là Group, tìm tiếp bên trong
         if (layer.typename === "LayerSet") {
             var found = findLayerByName(layer, layerName);
             if (found) return found;
@@ -140,7 +121,6 @@ function findLayerByName(parent, layerName) {
     return null;
 }
 
-// Cập nhật nội dung của một Text Layer
 function updateTextLayer(doc, layerName, newText) {
     var layer = findLayerByName(doc, layerName);
     if (!layer) {
@@ -150,75 +130,81 @@ function updateTextLayer(doc, layerName, newText) {
         throw new Error("Layer '" + layerName + "' không phải Text Layer");
     }
     layer.textItem.contents = newText;
-    log("  - Đã cập nhật text '" + layerName + "' = " + newText);
 }
 
-// Replace Contents của Smart Object bằng file ảnh mới
-// (sử dụng Action Descriptor vì DOM của PS không có hàm public cho việc này)
 function replaceSmartObjectContents(doc, layerName, imagePath) {
     var layer = findLayerByName(doc, layerName);
     if (!layer) {
-        throw new Error("Không tìm thấy Smart Object layer: '" + layerName + "'");
+        throw new Error("Không tìm thấy Smart Object: '" + layerName + "'");
     }
 
-    var imgFile = new File(imagePath);
+    // Nếu đường dẫn ảnh là tương đối (vd: "images/avatar1.jpg"), 
+    // tự ghép với thư mục script
+    var imgFile;
+    if (imagePath.charAt(0) === '/' || imagePath.charAt(1) === ':' || imagePath.charAt(0) === '\\') {
+        // Đường dẫn tuyệt đối
+        imgFile = new File(imagePath);
+    } else {
+        // Đường dẫn tương đối -> ghép với thư mục script
+        imgFile = new File(SCRIPT_FOLDER + "/" + imagePath);
+    }
+
     if (!imgFile.exists) {
-        throw new Error("Không tìm thấy file ảnh: " + imagePath);
+        throw new Error("Không tìm thấy ảnh: " + imgFile.fsName);
     }
 
-    // Chọn layer Smart Object làm active layer
     doc.activeLayer = layer;
 
-    // Gọi action "placedLayerReplaceContents"
     var idReplace = stringIDToTypeID("placedLayerReplaceContents");
     var desc = new ActionDescriptor();
     desc.putPath(charIDToTypeID("null"), imgFile);
-    desc.putInteger(charIDToTypeID("PgNm"), 1); // page 1 (cho file PDF/AI nhiều trang)
+    desc.putInteger(charIDToTypeID("PgNm"), 1);
     executeAction(idReplace, desc, DialogModes.NO);
-
-    log("  - Đã thay thế Smart Object '" + layerName + "' = " + imagePath);
 }
 
 // ============================================================================
-// PHẦN 5: XUẤT FILE JPG
+// XUẤT JPG
 // ============================================================================
 function exportAsJPG(doc, outputFolder, fileName, quality) {
     var outFile = new File(outputFolder.fsName + "/" + fileName);
 
     var jpgOptions = new JPEGSaveOptions();
-    jpgOptions.quality = quality;                              // 0..12
+    jpgOptions.quality = quality;
     jpgOptions.embedColorProfile = true;
-    jpgOptions.formatOptions = FormatOptions.STANDARDBASELINE; // tương thích cao
+    jpgOptions.formatOptions = FormatOptions.STANDARDBASELINE;
     jpgOptions.matte = MatteType.NONE;
 
-    // asCopy = true => xuất ra một bản copy, KHÔNG đụng tới document đang mở
+    // asCopy=true => xuất bản copy, KHÔNG đụng tới template gốc
     doc.saveAs(outFile, jpgOptions, true, Extension.LOWERCASE);
-
-    log("  -> Đã xuất: " + outFile.fsName);
 }
 
 // ============================================================================
-// PHẦN 6: HÀM CHÍNH (Main)
+// MAIN
 // ============================================================================
 function main() {
-    // --- Kiểm tra các file/đường dẫn cấu hình ---
     var templateFile = new File(CONFIG.templatePath);
     var csvFile      = new File(CONFIG.csvPath);
     var outputFolder = new Folder(CONFIG.outputDir);
 
+    // --- Kiểm tra file template ---
     if (!templateFile.exists) {
-        alert("Không tìm thấy file template:\n" + CONFIG.templatePath);
+        alert("KHÔNG TÌM THẤY FILE template.psd\n\n" +
+              "Hãy đặt file template.psd vào cùng thư mục với script:\n" +
+              SCRIPT_FOLDER.fsName);
         return;
     }
+
+    // --- Kiểm tra file CSV ---
     if (!csvFile.exists) {
-        alert("Không tìm thấy file CSV:\n" + CONFIG.csvPath);
+        alert("KHÔNG TÌM THẤY FILE data.csv\n\n" +
+              "Hãy đặt file data.csv vào cùng thư mục với script:\n" +
+              SCRIPT_FOLDER.fsName);
         return;
     }
+
+    // --- Tự tạo thư mục output ---
     if (!outputFolder.exists) {
-        if (!outputFolder.create()) {
-            alert("Không thể tạo thư mục output: " + CONFIG.outputDir);
-            return;
-        }
+        outputFolder.create();
     }
 
     // --- Đọc CSV ---
@@ -231,34 +217,34 @@ function main() {
     }
 
     if (rows.length < 2) {
-        alert("File CSV phải có ít nhất 1 dòng header và 1 dòng dữ liệu.");
+        alert("File CSV phải có ít nhất 1 dòng tiêu đề và 1 dòng dữ liệu!");
         return;
     }
 
-    // --- Lấy chỉ số các cột từ header ---
+    // --- Lấy chỉ số các cột ---
     var header = rows[0];
     var idxName = indexOfArr(header, "Ten_Khach_Hang");
     var idxCode = indexOfArr(header, "Ma_Giam_Gia");
     var idxImg  = indexOfArr(header, "Duong_Dan_Anh");
 
     if (idxName < 0 || idxCode < 0 || idxImg < 0) {
-        alert("CSV phải có đủ 3 cột: Ten_Khach_Hang, Ma_Giam_Gia, Duong_Dan_Anh");
+        alert("File CSV thiếu cột!\n\nPhải có đủ 3 cột:\n" +
+              "  - Ten_Khach_Hang\n" +
+              "  - Ma_Giam_Gia\n" +
+              "  - Duong_Dan_Anh");
         return;
     }
 
-    // --- Tắt các dialog không cần thiết để chạy mượt ---
     var prevDialogMode = app.displayDialogs;
     app.displayDialogs = DialogModes.NO;
 
-    var totalRows   = rows.length - 1;
-    var successCnt  = 0;
-    var errorList   = [];
+    var totalRows  = rows.length - 1;
+    var successCnt = 0;
+    var errorList  = [];
 
-    // --- Vòng lặp xử lý từng dòng dữ liệu ---
+    // --- Vòng lặp xử lý ---
     for (var r = 1; r < rows.length; r++) {
         var row = rows[r];
-
-        // Bỏ qua dòng thiếu cột
         if (row.length <= Math.max(idxName, idxCode, idxImg)) {
             errorList.push("Dòng " + (r + 1) + ": thiếu cột.");
             continue;
@@ -268,56 +254,43 @@ function main() {
         var maGG     = row[idxCode];
         var duongDan = row[idxImg];
 
-        log("==> Xử lý dòng " + r + ": " + tenKH);
-
         var doc = null;
         try {
-            // Mở lại file template gốc (KHÔNG ghi đè)
             doc = app.open(templateFile);
-
-            // Bước 1: Cập nhật tên khách hàng
             updateTextLayer(doc, CONFIG.layerNameText, tenKH);
-
-            // Bước 2: Cập nhật mã giảm giá
             updateTextLayer(doc, CONFIG.layerCodeText, maGG);
-
-            // Bước 3: Replace Contents cho Smart Object
             replaceSmartObjectContents(doc, CONFIG.layerAvatarSO, duongDan);
 
-            // Bước 4: Xuất JPG chất lượng 12
             var fileName = CONFIG.outputPrefix + sanitizeFileName(tenKH) + ".jpg";
             exportAsJPG(doc, outputFolder, fileName, CONFIG.jpgQuality);
-
             successCnt++;
         } catch (err) {
             errorList.push("Dòng " + (r + 1) + " (" + tenKH + "): " + err.message);
-            log("  !! LỖI: " + err.message);
         } finally {
-            // Đóng document KHÔNG lưu => template gốc không bị thay đổi
+            // Đóng KHÔNG lưu => template gốc giữ nguyên
             if (doc) {
                 try { doc.close(SaveOptions.DONOTSAVECHANGES); } catch (e2) {}
             }
         }
     }
 
-    // --- Khôi phục dialog mode ---
     app.displayDialogs = prevDialogMode;
 
     // --- Báo cáo kết quả ---
-    var summary = "HOÀN TẤT!\n" +
-        "Tổng số dòng: " + totalRows + "\n" +
-        "Thành công:   " + successCnt + "\n" +
-        "Lỗi:          " + errorList.length;
+    var summary = "HOÀN TẤT!\n\n" +
+        "Tổng số dòng:  " + totalRows + "\n" +
+        "Thành công:    " + successCnt + "\n" +
+        "Lỗi:           " + errorList.length + "\n\n" +
+        "Ảnh xuất ra ở: " + outputFolder.fsName;
 
     if (errorList.length > 0) {
         summary += "\n\nChi tiết lỗi:\n" + errorList.join("\n");
     }
     alert(summary);
-    log(summary);
 }
 
 // ============================================================================
-// CHẠY SCRIPT
+// CHẠY
 // ============================================================================
 try {
     main();
